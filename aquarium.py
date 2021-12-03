@@ -14,7 +14,7 @@ for i in range(1,10):
 		b=b+abs(cos(2*pi*(j)/i))
 	print(max(a,b),i)
 
-
+#hi hi
 
 L=600
 pygame.init()
