@@ -14,7 +14,7 @@ for i in range(1,10):
 		b=b+abs(cos(2*pi*(j)/i))
 	print(max(a,b),i)
 
-#hi hi
+
 
 L=600
 pygame.init()
@@ -140,7 +140,7 @@ def grad(I,yeux):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
-			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]# décroit avec distance mais compensé yeux
+			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]*(1+uniform(-1,1)/yeux)# décroit avec distance mais compensé yeux
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	return (pos[0]-yeux,pos[1]-yeux)
 	
@@ -196,7 +196,7 @@ class Organism():
 
 		
 	def buil_Im(self):
-		Lm=max(30,20*(len(self.code)))
+		Lm=max(30,20*(len(self.code)),20*max(len(elem) for elem in self.code))
 		self.im=pygame.Surface((Lm,Lm),pygame.SRCALPHA, 32)# take width into account
 		
 		for j in range(0,self.sym):
@@ -228,8 +228,8 @@ class Organism():
 		I1=int(self.yc)//10+60*(int(self.xc)//10)
 		G=grad(I1,self.yeux+1)
 		G=G/((G[0]**2+G[1]**2)**0.5+0.0001)
-		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1*self.yeux+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[1]*np.heaviside(self.fast,0)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
-		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1*self.yeux+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[0]*np.heaviside(self.fast,0)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
+		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[1]*np.heaviside(self.fast,0)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
+		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[0]*np.heaviside(self.fast,0)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
 		self.xc=(self.xc+self.vx)%L
 		self.yc=(self.yc+self.vy)%L
 		consumed=0
