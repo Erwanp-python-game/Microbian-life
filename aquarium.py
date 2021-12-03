@@ -140,7 +140,7 @@ def grad(I,yeux):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
-			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]*(1+uniform(-1,1)/yeux)# décroit avec distance mais compensé yeux
+			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]*(1+uniform(-5,5)/yeux**2)# décroit avec distance mais compensé yeux
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	return (pos[0]-yeux,pos[1]-yeux)
 	
@@ -228,8 +228,8 @@ class Organism():
 		I1=int(self.yc)//10+60*(int(self.xc)//10)
 		G=grad(I1,self.yeux+1)
 		G=G/((G[0]**2+G[1]**2)**0.5+0.0001)
-		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[1]*np.heaviside(self.fast,0)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
-		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[0]*np.heaviside(self.fast,0)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
+		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[1]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
+		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[0]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
 		self.xc=(self.xc+self.vx)%L
 		self.yc=(self.yc+self.vy)%L
 		consumed=0
@@ -359,16 +359,18 @@ font = pygame.font.Font('freesansbold.ttf', 13)
 def show_species():
 	back=pygame.Surface((200,L),pygame.SRCALPHA, 32)
 	back.fill((0,0,0))
-	U=20
+	U=20-curseur*50
 	fenetre.blit(back,(L,0))
-	for i,j in enumerate(all_codes):
-		U=U+max(20,all_im[i].get_width())
+	for i,j in enumerate(reversed(all_codes)):
+		U=U+50
 		T=showcode(j)
 		text = font.render(T, True, (255,255,255))
 		textRect = text.get_rect()
 		textRect.topleft = (L+20, U)
 		fenetre.blit(text,textRect)
-		fenetre.blit(pygame.transform.rotate(all_im[i],90),(textRect[0]+textRect.width+20,U-all_im[i].get_width()//2+textRect.height//2))
+		IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
+		Ll=int(50*IM.get_width()/IM.get_height())
+		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+textRect.width+20,U))
 		
 
 
@@ -391,6 +393,7 @@ ax2 = fig.add_subplot(2, 1, 2)
 graphe=0
 I=-1
 fenetre.blit(fond,(0,0))
+curseur=0
 while q==0:
 	T1=pygame.time.get_ticks()
 	I+=1
@@ -407,6 +410,11 @@ while q==0:
 		if KEY[K_SPACE]:
 			trace=(trace+1)%2
 			print(trace)
+		if event.type==MOUSEBUTTONUP:
+			if event.button==5:
+				curseur=(curseur+1)
+			if event.button==4:
+				curseur=(curseur-1)
 
 			
 
