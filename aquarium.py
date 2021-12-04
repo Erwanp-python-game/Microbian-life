@@ -217,8 +217,7 @@ class Organism():
 						Ir=pygame.transform.flip(images_cell[self.code[i][k]],True,True)
 						self.im.blit(Im,(X+deltaX-shift,Y+deltaY-shift))
 						self.im.blit(pygame.transform.rotate(Ir,A*180/pi),(X-deltaX-shift,Y-deltaY-shift))
-					
-			
+		self.im.fill((255,255,255,215),special_flags=BLEND_RGBA_MULT)
 
 		if len(all_codes)==len(all_im)+1 and self.code==all_codes[-1]:
 			all_im.append(self.im)
@@ -312,52 +311,62 @@ def showcode(code):
 			a=a+str(j)
 	return a
 
-def mutation(code_g):
+def mutation(code_g):# assurer qu'une mutation ait lieu
+	muted=0
 	code_r=deepcopy(code_g)
-	R=randint(-2,10)
-	if R>8:
-		Muta=randint(1,len(code_g)-1)
-		code_r[Muta][0]=choice(images_cell_center)
+	while muted==0:
+	
+		R=randint(-2,10)
 		
-	if R<=8 and R>6:
-		if randint(0,2)>=1:
-			a=1
-			for i in range(0,len(code_r)):
-				a=min((i-1)*abs(tan(pi/(code_g[0][0]+1)))-1-len(code_g[i]),a)
-			if len(code_r)>2 and a>0:
-				code_r[0][0]+=1
+		if R>8:
+			Muta=randint(1,len(code_g)-1)
+			code_r[Muta][0]=choice(images_cell_center)
+			
+		if R<=8 and R>6:
+			if randint(0,2)>=1:
+				a=1
+				for i in range(1,len(code_r)):
+					a=min((i-1)*abs(tan(pi/(code_r[0][0]+1)))-len(code_r[i]),a)# là y a un pb
+				print('sym',a,code_r[0][0],code_g)
+				if len(code_r)>2 and (code_r[0][0]==1 or a>=0):
+					code_r[0][0]+=1
+					muted=1
+					print('sym_app')
+				
+			else:
+				code_r[0][0]=max(code_r[0][0]-1,1)
+				muted=1
+			
+		if R<=6 and R>1:
+	
+			if len(code_r)==2 and len(code_r[1])==1:
+				code_r[0][0]=choices([1,2,3,4,5,6],[6,5,4,3,2,1],k=1)[0]
+			code_r.append([choice(images_cell_center)])
+			muted=1
+		
+		if R<=1:# check angle
+				print("largeur")
+				Muta=randint(1,len(code_g)-1)
+				if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
+					if randint(0,len(images_cell_center)+len(images_cell_end))>len(images_cell_end) or (code_r[Muta][-1] in images_cell_end):
+						code_r[Muta].insert(0,choice(images_cell_center))
+					else:
+						code_r[Muta].append(choice(images_cell_end))
+					muted=1
+		
+		if (code_r in all_codes)==False:
+			all_codes.append(code_r)
+			update_colors()
+			nb.append(0)
+			print(showcode(code_r))
+			return code_r
 			
 		else:
-			code_r[0][0]=max(code_r[0][0]-1,1)
-		
-	if R<=6 and R>1:
-
-		if len(code_r)==2 and len(code_r[1])==1:
-			code_r[0][0]=choices([1,2,3,4,5,6],[6,5,4,3,2,1],k=1)[0]
-		code_r.append([choice(images_cell_center)])
-	
-	if R<=1:# check angle
-			print("largeur")
-			Muta=randint(1,len(code_g)-1)
-			if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
-				if randint(0,len(images_cell_center)+len(images_cell_end))>len(images_cell_end) or (code_r[Muta][-1] in images_cell_end):
-					code_r[Muta].insert(0,choice(images_cell_center))
-				else:
-					code_r[Muta].append(choice(images_cell_end))
-	
-	if (code_r in all_codes)==False:
-		all_codes.append(code_r)
-		update_colors()
-		nb.append(0)
-		print(showcode(code_r))
-		return code_r
-		
-	else:
-		return code_g
+			return code_r
 
 font = pygame.font.Font('freesansbold.ttf', 13)
 def show_species():
-	back=pygame.Surface((200,L),pygame.SRCALPHA, 32)
+	back=pygame.Surface((200,L), 32)
 	back.fill((0,0,0))
 	U=20-curseur*50
 	fenetre.blit(back,(L,0))
@@ -369,6 +378,7 @@ def show_species():
 		textRect.topleft = (L+20, U)
 		fenetre.blit(text,textRect)
 		IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
+		IM=IM.convert(back)
 		Ll=int(50*IM.get_width()/IM.get_height())
 		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+textRect.width+20,U))
 		
