@@ -326,7 +326,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 			if randint(0,2)>=1:
 				a=1
 				for i in range(1,len(code_r)):
-					a=min((i-1)*abs(tan(pi/(code_r[0][0]+1)))-len(code_r[i]),a)# là y a un pb
+					a=min((i-1)*abs(tan(pi/(code_r[0][0]+1)))-len(code_r[i]),a)-1# là y a un pb
 				print('sym',a,code_r[0][0],code_g)
 				if len(code_r)>2 and (code_r[0][0]==1 or a>=0):
 					code_r[0][0]+=1
