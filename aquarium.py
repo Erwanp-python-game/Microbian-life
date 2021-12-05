@@ -340,7 +340,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 		if R<=6 and R>1:
 	
 			if len(code_r)==2 and len(code_r[1])==1:
-				code_r[0][0]=choices([1,2,3,4,5,6],[6,5,4,3,2,1],k=1)[0]
+				code_r[0][0]=choices([1,2,3,4,5,6],[6,5,4,3,2,1],k=1)[0] # faire rétrécir
 			code_r.append([choice(images_cell_center)])
 			muted=1
 		
