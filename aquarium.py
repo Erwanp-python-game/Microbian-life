@@ -464,7 +464,7 @@ while q==0:
 
 	if I%10000==0:
 		for i in range(0,len(col)):
-			Big_data[i]=Big_data[i][::2]b
+			Big_data[i]=Big_data[i][::2]
 		
 		plt.pause(0.001)
 	if (I%100)==1:
