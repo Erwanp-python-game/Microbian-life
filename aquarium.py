@@ -456,7 +456,7 @@ while q==0:
 	if (I%100)==1:
 		print(pygame.time.get_ticks()-T1,O2+2*CO2+nourriture.sum()-300*2*10,np.sum(nb))
 		for i in range(0,len(col)):
-			Big_data[i].append(round(nb[i]/np.sum(nb),2))
+			Big_data[i].append(round(nb[i]/np.sum(nb),2))# have smthg to record indices
 	
 	show_species()
 	pygame.display.flip()
