@@ -113,10 +113,11 @@ def AngleReturn(x,y):
 	else:
 		return np.arctan(y/x)*(180/pi)
 
-def meanAngle(a1,a2):
+def meanAngle(a1,a2,size):
 	a1=a1/(180/pi)
 	a2=a2/(180/pi)
-	return AngleReturn(0.9*cos(a1)+0.1*cos(a2),0.9*sin(a1)+0.1*sin(a2))
+	S=min(size/1000,0.05)
+	return AngleReturn((0.9+S)*cos(a1)+(0.1-S)*cos(a2),(0.9+S)*sin(a1)+(0.1-S)*sin(a2))
 
 def show_food(actif):
 	if actif==1:
@@ -246,7 +247,7 @@ class Organism():
 		self.stockedCO2=self.stockedCO2+consumed/2
 		self.age=self.age+1+0.5*(9+0.05*self.size-consumed*(self.sym+0.2)/(self.sym))/(1+self.gras)#à voir
 		self.I1=I1
-		self.angle=meanAngle(self.angle,AngleReturn(self.vx,self.vy))
+		self.angle=meanAngle(self.angle,AngleReturn(self.vx,self.vy),self.size)
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
 			if randint(0,7)==0:
@@ -344,7 +345,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 			code_r.append([choice(images_cell_center)])
 			muted=1
 		
-		if R<=1:# check angle
+		if R<=1 and R>-2:# check angle
 				print("largeur")
 				Muta=randint(1,len(code_g)-1)
 				if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
