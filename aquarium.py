@@ -303,6 +303,7 @@ def update_colors():
 		col.append((randint(0,255)/255,randint(0,255)/255,randint(0,255)/255))
 update_colors()
 nb=[0,0]
+Big_data=[[0],[0]]
 
 def showcode(code):
 	a=''
@@ -359,6 +360,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 			all_codes.append(code_r)
 			update_colors()
 			nb.append(0)
+			Big_data.append([0])
 			print(showcode(code_r))
 			return code_r
 			
@@ -397,6 +399,7 @@ for i in range(0,10):
 	All_Org.append(Organism(randint(0,L-1),randint(0,L-1),code,0))
 	All_Org[-1].buil_Im()
 	nb[all_codes.index(code)]+=1
+	#Big_data[all_codes.index(code)][0]+=1/10
 	
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)	
@@ -405,6 +408,7 @@ graphe=0
 I=-1
 fenetre.blit(fond,(0,0))
 curseur=0
+
 while q==0:
 	T1=pygame.time.get_ticks()
 	I+=1
@@ -421,6 +425,8 @@ while q==0:
 		if KEY[K_SPACE]:
 			trace=(trace+1)%2
 			print(trace)
+		if KEY[K_a]:
+			graphe=(graphe+1)%2
 		if event.type==MOUSEBUTTONUP:
 			if event.button==5:
 				curseur=(curseur+1)
@@ -449,6 +455,9 @@ while q==0:
 		plt.pause(0.001)
 	if (I%100)==1:
 		print(pygame.time.get_ticks()-T1,O2+2*CO2+nourriture.sum()-300*2*10,np.sum(nb))
+		for i in range(0,len(col)):
+			Big_data[i].append(round(nb[i]/np.sum(nb),2))
+	
 	show_species()
 	pygame.display.flip()
 	clock.tick(30)
