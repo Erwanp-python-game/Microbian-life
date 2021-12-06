@@ -304,6 +304,7 @@ def update_colors():
 update_colors()
 nb=[0,0]
 Big_data=[[0],[0]]
+start_I=[0,0]
 
 def showcode(code):
 	a=''
@@ -361,6 +362,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 			update_colors()
 			nb.append(0)
 			Big_data.append([0])
+			start_I.append(I)
 			print(showcode(code_r))
 			return code_r
 			
@@ -383,7 +385,7 @@ def show_species():
 		IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
 		IM=IM.convert(back)
 		Ll=int(50*IM.get_width()/IM.get_height())
-		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+textRect.width+20,U))
+		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+textRect.width+20,U))# afficher par plus vivantes
 		
 
 
@@ -405,6 +407,7 @@ fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)	
 ax2 = fig.add_subplot(2, 1, 2)
 graphe=0
+graphe_tot=0
 I=-1
 fenetre.blit(fond,(0,0))
 curseur=0
@@ -427,6 +430,8 @@ while q==0:
 			print(trace)
 		if KEY[K_a]:
 			graphe=(graphe+1)%2
+		if KEY[K_b]:
+			graphe_tot=1
 		if event.type==MOUSEBUTTONUP:
 			if event.button==5:
 				curseur=(curseur+1)
@@ -450,14 +455,23 @@ while q==0:
 		ax2.scatter(I,CO2,c='red')
 		for i in range(0,len(col)):
 			ax1.scatter(I,nb[i],color=col[i])
-			
+	
+	if graphe_tot==1:
+		for i in range(0,len(col)):
+			plt.plot(np.linspace(start_I[i],I,len(Big_data[i])),Big_data[i],color=col[i])
+		plt.show()
+		graphe_tot=0
+
+	if I%10000==0:
+		for i in range(0,len(col)):
+			Big_data[i]=Big_data[i][::2]b
 		
 		plt.pause(0.001)
 	if (I%100)==1:
 		print(pygame.time.get_ticks()-T1,O2+2*CO2+nourriture.sum()-300*2*10,np.sum(nb))
 		for i in range(0,len(col)):
-			Big_data[i].append(round(nb[i]/np.sum(nb),2))# have smthg to record indices
-	
+			Big_data[i].append(round(nb[i]/np.sum(nb),2))# have smthg to record indices where it started
+		
 	show_species()
 	pygame.display.flip()
 	clock.tick(30)
