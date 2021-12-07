@@ -270,7 +270,7 @@ class Organism():
 				nb[all_codes.index(self.code)]+=1
 			self.stockedCO2=self.stockedCO2-250-50*self.size
 			
-		if self.racine>0 and self.born+randint(100,300)<I and (self.vx**2+self.vy**2)<10/(self.racine*self.sym):
+		if self.racine>0 and self.born+randint(100,300)<I and (self.vx**2+self.vy**2)<5+(self.racine*self.sym):
 			self.not_fixed=0	
 				
 	
