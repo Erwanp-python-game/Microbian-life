@@ -27,8 +27,10 @@ courantX0=np.full((3*L,3*L),0.0)
 courantY0=np.full((3*L,3*L),0.0)
 
 x,y = np.meshgrid(np.linspace(-30,30,3*L),np.linspace(-30,30,3*L))
-speed=3
-for i in range(0,5):
+speed=2.5# previous3
+Rs=randint(2,3)#5
+print(Rs)
+for i in range(0,Rs):
 	xR=randint(-10,10)
 	yR=randint(-10,10)
 	I=(-1)**randint(0,1)
@@ -83,7 +85,7 @@ images_cell['N']=pygame.image.load('N.png')
 images_cell['Y']=pygame.image.load('Y.png')
 images_cell['R']=pygame.image.load('R.png')
 images_cell_center=['M','P','G','R']
-images_cell_end=['N','Y']#,'Y','P','C']
+images_cell_end=['N','Y','Y']#,'Y','P','C']
 
 all_codes=[]
 nbc={}
@@ -270,7 +272,7 @@ class Organism():
 				nb[all_codes.index(self.code)]+=1
 			self.stockedCO2=self.stockedCO2-250-50*self.size
 			
-		if self.racine>0 and self.born+randint(100,300)<I and (self.vx**2+self.vy**2)<5+(self.racine*self.sym):
+		if self.racine>0 and self.born+randint(100,300)<I and (self.vx**2+self.vy**2)<5+(self.racine*self.sym) and randint(0,5)==0:
 			self.not_fixed=0	
 				
 	
@@ -328,11 +330,17 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 	code_r=deepcopy(code_g)
 	while muted==0:
 	
-		R=randint(-2,10)
+		R=randint(-4,11)
+		if R>10:
+			Muta=randint(1,len(code_g)-1)
+			if code_r[Muta][-1] in images_cell_end:
+				code_r[Muta][-1]=choice(images_cell_end)
+				muted=1
 		
-		if R>8:
+		if R>8 and R<11:
 			Muta=randint(1,len(code_g)-1)
 			code_r[Muta][0]=choice(images_cell_center)
+			muted=1
 			
 		if R<=8 and R>6:
 			if randint(0,1)>=1:
@@ -356,11 +364,11 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 			code_r.append([choice(images_cell_center)])
 			muted=1
 		
-		if R<=1 and R>-2:# check angle
+		if R<=1 and R>-5:# check angle
 				print("largeur")
 				Muta=randint(1,len(code_g)-1)
 				if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
-					if randint(0,len(images_cell_center)+len(images_cell_end))>len(images_cell_end) or (code_r[Muta][-1] in images_cell_end):
+					if randint(0,3)==1 or (code_r[Muta][-1] in images_cell_end):
 						code_r[Muta].insert(0,choice(images_cell_center))
 					else:
 						code_r[Muta].append(choice(images_cell_end))
