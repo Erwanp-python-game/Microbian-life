@@ -81,7 +81,8 @@ images_cell['P']=pygame.image.load('P.png')
 images_cell['G']=pygame.image.load('G.png')
 images_cell['N']=pygame.image.load('N.png')
 images_cell['Y']=pygame.image.load('Y.png')
-images_cell_center=['M','P','G']
+images_cell['R']=pygame.image.load('R.png')
+images_cell_center=['M','P','G','R']
 images_cell_end=['N','Y']#,'Y','P','C']
 
 all_codes=[]
@@ -91,6 +92,7 @@ nbc['P']=randint(0,200)
 nbc['G']=randint(0,200)
 nbc['N']=randint(0,200)
 nbc['Y']=randint(0,200)
+nbc['R']=randint(0,200)
 
 fleche=pygame.image.load('fleche.png')
 fond=pygame.Surface((L,L),pygame.SRCALPHA, 32)
@@ -164,7 +166,10 @@ class Organism():
 		self.nageoire=0
 		seedn=0
 		self.fast=0
+		self.racine=0
+		self.born=I
 		addL=0
+		self.sym=self.code[0][0]
 		for i in code:
 			for j in i:
 				if 'M'==j:
@@ -178,14 +183,17 @@ class Organism():
 					self.yeux+=1
 				if 'N'==j:
 					self.nageoire+=1
+				if 'R'==j:
+					self.racine+=1
+					self.type_photo+=1
 			addL=addL+2*(len(i)-1)
-		addL=addL-2*self.nageoire-2*self.yeux
+		addL=addL-2*self.nageoire*self.sym-2*self.yeux*self.sym
 		for j in range(1,len(code)):
 			seedn+=nbc[self.code[j][0]]
 		seed(seedn)
 		self.color=(randint(0,255),randint(0,255),randint(0,255))
 		seed()
-		self.sym=self.code[0][0]
+		
 		self.size=(len(code)-2)*self.sym+1+addL
 		self.type_nourr=max((self.type_nourr-1)*self.sym+1,0)# 
 		self.type_photo=max((self.type_photo-1)*self.sym+1,0)# gras pas assez efficace
@@ -193,7 +201,7 @@ class Organism():
 		self.yeux=int(max((self.yeux-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.nageoire=int(max((self.nageoire-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.stockedCO2=250+50*self.size#300 de base
-		
+		self.not_fixed=1
 
 		
 	def buil_Im(self):
@@ -230,8 +238,8 @@ class Organism():
 		G=G/((G[0]**2+G[1]**2)**0.5+0.0001)
 		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[1]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
 		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[0]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
-		self.xc=(self.xc+self.vx)%L
-		self.yc=(self.yc+self.vy)%L
+		self.xc=(self.xc+self.vx*self.not_fixed)%L
+		self.yc=(self.yc+self.vy*self.not_fixed)%L
 		consumed=0
 		if self.type_nourr>0:
 			consumed=max(min(nourriture[I1],10*self.type_nourr,10*self.type_nourr*O2/15000),0)
@@ -262,7 +270,8 @@ class Organism():
 				nb[all_codes.index(self.code)]+=1
 			self.stockedCO2=self.stockedCO2-250-50*self.size
 			
-			
+		if self.racine>0 and self.born+randint(100,300)<I and (self.vx**2+self.vy**2)<10/(self.racine*self.sym):
+			self.not_fixed=0	
 				
 	
 	def draw(self,trace):
@@ -376,7 +385,7 @@ def show_species():
 	U=20-curseur*50
 	fenetre.blit(back,(L,0))
 	for i,j in enumerate(reversed(all_codes)):
-		U=U+50
+		U=U+60
 		T=showcode(j)
 		text = font.render(T, True, (255,255,255))
 		textRect = text.get_rect()
@@ -385,7 +394,10 @@ def show_species():
 		IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
 		IM=IM.convert(back)
 		Ll=int(50*IM.get_width()/IM.get_height())
-		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+textRect.width+20,U))# afficher par plus vivantes
+		pygame.draw.line(fenetre,(255,255,255),(L,U),(L+200,U))
+		C=(int(col[len(all_im)-i-1][0]*255),int(col[len(all_im)-i-1][1]*255),int(col[len(all_im)-i-1][2]*255))
+		pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),width=5)
+		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
 		
 
 
