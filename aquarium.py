@@ -145,7 +145,7 @@ def grad(I,yeux):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
-			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]*(1+uniform(-5,5)/yeux**2)# diviser par la masse de bestioles dessus
+			X[i+yeux][j+yeux]=max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)*(1+uniform(-5,5)/yeux**2),0)# diviser par la masse de bestioles dessus
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	return (pos[0]-yeux,pos[1]-yeux)
 	
