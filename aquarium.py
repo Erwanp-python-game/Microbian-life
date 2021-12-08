@@ -369,7 +369,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 				print("largeur")
 				Muta=randint(1,len(code_g)-1)
 				if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
-					if randint(0,3)==1 or (code_r[Muta][-1] in images_cell_end):
+					if randint(0,4)==1 or (code_r[Muta][-1] in images_cell_end):
 						code_r[Muta].insert(0,choice(images_cell_center))
 					else:
 						code_r[Muta].append(choice(images_cell_end))
