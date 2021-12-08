@@ -145,7 +145,7 @@ def grad(I,yeux):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
-			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]*(1+uniform(-5,5)/yeux**2)# décroit avec distance mais compensé yeux
+			X[i+yeux][j+yeux]=nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600]*(1+uniform(-5,5)/yeux**2)# diviser par la masse de bestioles dessus
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	return (pos[0]-yeux,pos[1]-yeux)
 	
@@ -281,7 +281,8 @@ class Organism():
 		if trace==1:
 			pygame.draw.circle(fond,self.color,(int(self.xc-1),int(self.yc-1)),2)
 		#pygame.draw.circle(fenetre,(self.type_nourr*255,(1-self.type_nourr)*255,0),(int(self.xc),int(self.yc)),4)
-		fenetre.blit(pygame.transform.rotate(self.im,-self.angle-90),(int(self.xc-self.im.get_width()//2),int(self.yc-self.im.get_height()//2)))
+		Image=pygame.transform.rotate(self.im,-self.angle-90)
+		fenetre.blit(Image,(int(self.xc-Image.get_width()//2),int(self.yc-Image.get_height()//2)))
 			
 	
 	def alive(self):
