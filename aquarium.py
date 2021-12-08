@@ -85,7 +85,7 @@ images_cell['N']=pygame.image.load('N.png')
 images_cell['Y']=pygame.image.load('Y.png')
 images_cell['R']=pygame.image.load('R.png')
 images_cell_center=['M','P','G','R']
-images_cell_end=['N','Y','Y']#,'Y','P','C']
+images_cell_end=['N','Y']#,'Y','P','C']
 
 all_codes=[]
 nbc={}
@@ -145,9 +145,10 @@ def grad(I,yeux):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
-			X[i+yeux][j+yeux]=max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)*(1+uniform(-5,5)/yeux**2),0)# diviser par la masse de bestioles dessus
+			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)+uniform(-200,200)/yeux**2,0)# diviser par la masse de bestioles dessus
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
-	return (pos[0]-yeux,pos[1]-yeux)
+	Gl=2*max(2-yeux,0)
+	return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
 	
 All_Org=[]
 class Organism():
@@ -238,8 +239,8 @@ class Organism():
 		I1=int(self.yc)//10+60*(int(self.xc)//10)
 		G=grad(I1,self.yeux+1)
 		G=G/((G[0]**2+G[1]**2)**0.5+0.0001)
-		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[1]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
-		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(3*self.nageoire+1)))+(8+2*self.nageoire+2*self.yeux)*dt*G[0]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
+		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(8+2*self.nageoire)*dt*G[1]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
+		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(8+2*self.nageoire)*dt*G[0]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
 		self.xc=(self.xc+self.vx*self.not_fixed)%L
 		self.yc=(self.yc+self.vy*self.not_fixed)%L
 		consumed=0
