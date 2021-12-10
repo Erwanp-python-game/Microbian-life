@@ -153,7 +153,7 @@ def grad(I,yeux):
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
 			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)+uniform(-200,200)/yeux**2,0)# diviser par la masse de bestioles dessus
-			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]# diviser par la ditance aussi
+			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]*((i-yeux)**2+(j-yeux)**2)**0.5# diviser par la ditance aussi
 	X=np.divide(X,Pr)
 	#print(Pr,X)
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
