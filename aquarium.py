@@ -54,8 +54,8 @@ print(pygame.time.get_ticks())
 # courantY=courantY0[L:2*L,L:2*L]
 
 subL=60
-proie=np.full((subL,subL),0.0)
-proie_mem=np.full((subL,subL),0.0)
+proie=np.full((subL,subL),1.0)
+proie_mem=np.full((subL,subL),1.0)
 dt=0.1
 diffu=0.1
 nourriture=np.random.uniform(size=subL**2)*4
@@ -153,7 +153,7 @@ def grad(I,yeux):
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
 			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)+uniform(-200,200)/yeux**2,0)# diviser par la masse de bestioles dessus
-			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]*((i-yeux)**2+(j-yeux)**2)**0.5# diviser par la ditance aussi
+			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]*((i-yeux)**2+(j-yeux)**2)**0.5
 	X=np.divide(X,Pr)
 	#print(Pr,X)
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
@@ -445,12 +445,12 @@ graphe_tot=0
 I=-1
 fenetre.blit(fond,(0,0))
 curseur=0
-filterA=[[0,0.15,0],[0.15,0.4,0.15],[0,0.15,0]]
+filterA=[[0,0.05,0],[0.05,0.8,0.05],[0,0.05,0]]
 
 while q==0:
 	T1=pygame.time.get_ticks()
 	I+=1
-	proie=np.full((subL,subL),0.0)
+	proie=np.full((subL,subL),1.0)
 	#pygame.time.wait(100)
 
 	nourriture=np.dot(flux,nourriture)
