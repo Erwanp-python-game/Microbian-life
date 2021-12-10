@@ -155,7 +155,9 @@ def grad(I,yeux):
 			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)+uniform(-200,200)/yeux**2,0)# diviser par la masse de bestioles dessus
 			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]*((i-yeux)**2+(j-yeux)**2)**0.5
 	X=np.divide(X,Pr)
-	#print(Pr,X)
+	# if yeux==2:
+		# print(Pr,X)
+	
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	Gl=2*max(3-yeux,1)
 	return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
@@ -200,7 +202,7 @@ class Organism():
 					self.racine+=1
 					self.type_photo+=1
 			addL=addL+2*(len(i)-1)
-		addL=addL-2*self.nageoire*self.sym-2*self.yeux*self.sym
+		addL=addL-1.8*self.nageoire*self.sym-1.8*self.yeux*self.sym
 		for j in range(1,len(code)):
 			seedn+=nbc[self.code[j][0]]
 		seed(seedn)
@@ -270,7 +272,7 @@ class Organism():
 		self.I1=I1
 		self.angle=meanAngle(self.angle,AngleReturn(self.vx,self.vy),self.size)
 		
-		proie[int(self.xc)//10][int(self.yc)//10]+=1
+		proie[int(self.xc)//10][int(self.yc)//10]+=self.size
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
 			if randint(0,7)==0:
@@ -484,8 +486,9 @@ while q==0:
 		if i.alive()==False:
 			i.release()
 			All_Org.remove(i)
-	proie_mem=proie.copy()
 	proie=signal.convolve2d(proie, filterA, mode='same', boundary='wrap')
+	proie_mem=proie.copy()
+	
 	if (I%100)==0 and graphe==1:
 		ax2.scatter(I,O2,c='blue')
 		ax2.scatter(I,CO2,c='red')
