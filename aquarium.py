@@ -5,6 +5,7 @@ from pygame.locals import *
 from random import *
 import matplotlib.pyplot as plt
 from copy import*
+from scipy import signal
 for i in range(1,10):
 	a=0
 	for j in range(0,i):
@@ -20,6 +21,9 @@ L=600
 pygame.init()
 fenetre = pygame.display.set_mode((L+200, L))
 print(pygame.time.get_ticks())
+
+
+
 courantX=np.full((L,L),0.0)
 courantY=np.full((L,L),0.0)
 
@@ -50,6 +54,8 @@ print(pygame.time.get_ticks())
 # courantY=courantY0[L:2*L,L:2*L]
 
 subL=60
+proie=np.full((subL,subL),0.0)
+proie_mem=np.full((subL,subL),0.0)
 dt=0.1
 diffu=0.1
 nourriture=np.random.uniform(size=subL**2)*4
@@ -143,9 +149,13 @@ def show_food(actif):
 
 def grad(I,yeux):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
+	Pr=np.full((2*yeux+1,2*yeux+1),1.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
 			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)+uniform(-200,200)/yeux**2,0)# diviser par la masse de bestioles dessus
+			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]# check courant pas trop fort
+	X=np.divide(X,Pr)
+	#print(Pr,X)
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	Gl=2*max(2-yeux,0)
 	return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
@@ -260,6 +270,8 @@ class Organism():
 		self.I1=I1
 		self.angle=meanAngle(self.angle,AngleReturn(self.vx,self.vy),self.size)
 		
+		proie[int(self.xc)//10][int(self.yc)//10]+=1
+		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
 			if randint(0,7)==0:
 				#print(self.code)
@@ -332,7 +344,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 	code_r=deepcopy(code_g)
 	while muted==0:
 	
-		R=randint(-4,11)
+		R=randint(-8,11)
 		if R>10:
 			Muta=randint(1,len(code_g)-1)
 			if code_r[Muta][-1] in images_cell_end:
@@ -348,7 +360,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 			if randint(0,1)>=1:
 				a=1
 				for i in range(2,len(code_r)):
-					a=min((i-1)*abs(tan(pi/(code_r[0][0]+1)))-len(code_r[i])+0.5,a)# là y a un pb
+					a=min((i-1)*abs(tan(pi/(code_r[0][0]+1)))-len(code_r[i])+0.5,a)
 				print('sym',a,code_r[0][0],code_g)
 				if len(code_r)>2 and (code_r[0][0]==1 or a>=0) and len(code_r[1])==1:
 					code_r[0][0]+=1
@@ -359,14 +371,14 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 				code_r[0][0]=max(code_r[0][0]-1,1)
 				muted=1
 			
-		if R<=6 and R>1:
+		if R<=6 and R>-4:
 	
 			if len(code_r)==2 and len(code_r[1])==1:
 				code_r[0][0]=choices([1,2,3,4,5,6],[6,5,4,3,2,1],k=1)[0] # faire rétrécir
 			code_r.append([choice(images_cell_center)])
 			muted=1
 		
-		if R<=1 and R>-5:# check angle
+		if R<=-4 and R>-9:# check angle
 				print("largeur")
 				Muta=randint(1,len(code_g)-1)
 				if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
@@ -406,7 +418,7 @@ def show_species():
 		Ll=int(50*IM.get_width()/IM.get_height())
 		pygame.draw.line(fenetre,(255,255,255),(L,U),(L+200,U))
 		C=(int(col[len(all_im)-i-1][0]*255),int(col[len(all_im)-i-1][1]*255),int(col[len(all_im)-i-1][2]*255))
-		pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),width=5)
+		pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),5)
 		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
 		
 
@@ -433,11 +445,12 @@ graphe_tot=0
 I=-1
 fenetre.blit(fond,(0,0))
 curseur=0
+filterA=[[0,0.15,0],[0.15,0.4,0.15],[0,0.15,0]]
 
 while q==0:
 	T1=pygame.time.get_ticks()
 	I+=1
-
+	proie=np.full((subL,subL),0.0)
 	#pygame.time.wait(100)
 
 	nourriture=np.dot(flux,nourriture)
@@ -471,7 +484,8 @@ while q==0:
 		if i.alive()==False:
 			i.release()
 			All_Org.remove(i)
-	
+	proie_mem=proie.copy()
+	proie=signal.convolve2d(proie, filterA, mode='same', boundary='wrap')
 	if (I%100)==0 and graphe==1:
 		ax2.scatter(I,O2,c='blue')
 		ax2.scatter(I,CO2,c='red')
@@ -490,7 +504,7 @@ while q==0:
 		
 		plt.pause(0.001)
 	if (I%100)==1:
-		print(pygame.time.get_ticks()-T1,O2+2*CO2+nourriture.sum()-300*2*10,np.sum(nb))
+		print(pygame.time.get_ticks()-T1,O2+2*CO2+nourriture.sum()-300*2*10,np.sum(nb),np.sum(proie))
 		for i in range(0,len(col)):
 			Big_data[i].append(round(nb[i]/np.sum(nb),2))# have smthg to record indices where it started
 		
