@@ -90,10 +90,12 @@ images_cell['G']=pygame.image.load('G.png')
 images_cell['N']=pygame.image.load('N.png')
 images_cell['Y']=pygame.image.load('Y.png')
 images_cell['R']=pygame.image.load('R.png')
-images_cell_center=['M','P','G','R']
+images_cell['O']=pygame.image.load('O.png')
+images_cell_center=['M','P','G','R','O']
 images_cell_end=['N','Y']#,'Y','P','C']
 
 all_codes=[]
+seed(0)
 nbc={}
 nbc['M']=randint(0,200)
 nbc['P']=randint(0,200)
@@ -101,6 +103,7 @@ nbc['G']=randint(0,200)
 nbc['N']=randint(0,200)
 nbc['Y']=randint(0,200)
 nbc['R']=randint(0,200)
+nbc['O']=randint(0,200)
 
 fleche=pygame.image.load('fleche.png')
 fond=pygame.Surface((L,L),pygame.SRCALPHA, 32)
@@ -172,7 +175,8 @@ class Organism():
 		self.vy=0
 		self.age=0
 		self.code=code
-		self.im=Img
+		self.imL=Img
+		self.im=Img[-1]
 		self.type_nourr=0
 		self.type_photo=0
 		self.gras=0
@@ -183,6 +187,7 @@ class Organism():
 		self.fast=0
 		self.racine=0
 		self.born=I
+		self.os=0
 		addL=0
 		self.sym=self.code[0][0]
 		for i in code:
@@ -198,6 +203,8 @@ class Organism():
 					self.yeux+=1
 				if 'N'==j:
 					self.nageoire+=1
+				if 'O'==j:
+					self.os+=1
 				if 'R'==j:
 					self.racine+=1
 					self.type_photo+=1
@@ -213,6 +220,7 @@ class Organism():
 		self.type_nourr=max((self.type_nourr-1)*self.sym+1,0)# 
 		self.type_photo=max((self.type_photo-1)*self.sym+1,0)# gras pas assez efficace
 		self.gras=max((self.gras-0.5)*self.sym+0.5,0)
+		self.os=max((self.os-1)*self.sym+1,0)
 		self.yeux=int(max((self.yeux-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.nageoire=int(max((self.nageoire-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.stockedCO2=250+50*self.size#300 de base
@@ -221,28 +229,46 @@ class Organism():
 		
 	def buil_Im(self):
 		Lm=max(30,20*(len(self.code)),20*max(len(elem) for elem in self.code))
-		self.im=pygame.Surface((Lm,Lm),pygame.SRCALPHA, 32)# take width into account
-		
-		for j in range(0,self.sym):
-			for i in range(1,len(self.code)):
-				A=j*2*pi/self.sym
-				X=int((i-1)*10*sin(A))+Lm//2-5
-				Y=int((i-1)*10*cos(A))+Lm//2-5
-				self.im.blit(images_cell[self.code[i][0]],(X,Y))
-				for k in range(1,len(self.code[i])):
-					deltaX=int((k)*10*cos(A))
-					deltaY=-int((k)*10*sin(A))
-					if self.code[i][k] not in images_cell_end:
-						self.im.blit(images_cell[self.code[i][k]],(X+deltaX,Y+deltaY))
-						self.im.blit(images_cell[self.code[i][k]],(X-deltaX,Y-deltaY))
-					else:
-						Im=pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi)
-						shift=(Im.get_width()//2)-5
-						Ir=pygame.transform.flip(images_cell[self.code[i][k]],True,True)
-						self.im.blit(Im,(X+deltaX-shift,Y+deltaY-shift))
-						self.im.blit(pygame.transform.rotate(Ir,A*180/pi),(X-deltaX-shift,Y-deltaY-shift))
-		self.im.fill((255,255,255,215),special_flags=BLEND_RGBA_MULT)
-
+		self.imL=[]
+		for h in range(7,int(np.heaviside(self.nageoire,0))*30+1+7):
+			ImA=pygame.Surface((Lm,Lm),pygame.SRCALPHA, 32)# take width into account
+			
+			for j in range(0,self.sym):
+				for i in range(1,len(self.code)):
+					A=j*2*pi/self.sym
+					X=int((i-1)*10*sin(A))+Lm//2-5
+					Y=int((i-1)*10*cos(A))+Lm//2-5
+					ImA.blit(images_cell[self.code[i][0]],(X,Y))
+					for k in range(1,len(self.code[i])):
+						deltaX=int((k)*10*cos(A))
+						deltaY=-int((k)*10*sin(A))
+						if self.code[i][k]=='N':
+							Anage=10*abs(h%30-15)-75
+							supX1=(5*cos((pi/180)*(-Anage))-5)*np.heaviside(self.nageoire,0)#attention on fait tourner les yeux aussi
+							supY1=5*sin((pi/180)*(-Anage))*np.heaviside(self.nageoire,0)
+							supX=supX1*cos(A)+supY1*sin(A)
+							supY=-supX1*sin(A)+supY1*cos(A)
+							supX2=-supX1*cos(A)+supY1*sin(A)
+							supY2=+supX1*sin(A)+supY1*cos(A)
+						else:
+							Anage=0
+							supX=0
+							supY=0
+							supX2=0
+							supY2=0
+						if self.code[i][k] not in images_cell_end:
+							ImA.blit(images_cell[self.code[i][k]],(X+deltaX,Y+deltaY))
+							ImA.blit(images_cell[self.code[i][k]],(X-deltaX,Y-deltaY))
+						else:
+							Im=pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi+Anage)
+							shift=(Im.get_width()//2)-5
+							Ir=pygame.transform.flip(images_cell[self.code[i][k]],True,True)
+							ImA.blit(Im,(X+deltaX-shift+supX,Y+deltaY-shift+supY))
+							ImA.blit(pygame.transform.rotate(Ir,A*180/pi-Anage),(X-deltaX-shift+supX2,Y-deltaY-shift+supY2))
+							
+			ImA.fill((255,255,255,215),special_flags=BLEND_RGBA_MULT)
+			self.im=ImA.copy()
+			self.imL.append(ImA)
 		if len(all_codes)==len(all_im)+1 and self.code==all_codes[-1]:
 			all_im.append(self.im)
 		
@@ -279,11 +305,11 @@ class Organism():
 				#print(self.code)
 				CM=mutation(deepcopy(self.code))
 				#print(CM,self.code)
-				All_Org.append(Organism((self.xc+np.random.normal(0,5))%600,(self.yc+np.random.normal(0,5))%600,CM,self.im))
+				All_Org.append(Organism((self.xc+np.random.normal(0,5))%600,(self.yc+np.random.normal(0,5))%600,CM,self.imL))
 				All_Org[-1].buil_Im()
 				nb[all_codes.index(CM)]+=1
 			else:
-				All_Org.append(Organism((self.xc+np.random.normal(0,5))%600,(self.yc+np.random.normal(0,5))%600,self.code,self.im))
+				All_Org.append(Organism((self.xc+np.random.normal(0,5))%600,(self.yc+np.random.normal(0,5))%600,self.code,self.imL))
 				nb[all_codes.index(self.code)]+=1
 			self.stockedCO2=self.stockedCO2-250-50*self.size
 			
@@ -292,16 +318,17 @@ class Organism():
 				
 	
 	def draw(self,trace):
-		global fenetre,all_codes
+		global fenetre,all_codes,I
 		if trace==1:
 			pygame.draw.circle(fond,self.color,(int(self.xc-1),int(self.yc-1)),2)
 		#pygame.draw.circle(fenetre,(self.type_nourr*255,(1-self.type_nourr)*255,0),(int(self.xc),int(self.yc)),4)
-		Image=pygame.transform.rotate(self.im,-self.angle-90)
+		Image=pygame.transform.rotate(self.imL[I%len(self.imL)],-self.angle-90)
+		print(I,I%len(self.imL),len(self.imL))
 		fenetre.blit(Image,(int(self.xc-Image.get_width()//2),int(self.yc-Image.get_height()//2)))
 			
 	
 	def alive(self):
-		return (self.age<2800+np.random.normal(0,100)+200*self.size)
+		return (self.age<2800+np.random.normal(0,100)+200*self.size+self.os*150)
 		
 	def release(self):
 		global CO2,O2,nourriture
@@ -434,7 +461,7 @@ for i in range(0,10):
 		code=[[1],['P']]
 	
 
-	All_Org.append(Organism(randint(0,L-1),randint(0,L-1),code,0))
+	All_Org.append(Organism(randint(0,L-1),randint(0,L-1),code,[0]))
 	All_Org[-1].buil_Im()
 	nb[all_codes.index(code)]+=1
 	#Big_data[all_codes.index(code)][0]+=1/10
