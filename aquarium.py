@@ -246,10 +246,10 @@ class Organism():
 							Anage=10*abs(h%30-15)-75
 							supX1=(5*cos((pi/180)*(-Anage))-5)*np.heaviside(self.nageoire,0)#attention on fait tourner les yeux aussi
 							supY1=5*sin((pi/180)*(-Anage))*np.heaviside(self.nageoire,0)
-							supX=supX1*cos(A)+supY1*sin(A)
-							supY=-supX1*sin(A)+supY1*cos(A)
-							supX2=-supX1*cos(A)+supY1*sin(A)
-							supY2=+supX1*sin(A)+supY1*cos(A)
+							supX=int(supX1*cos(A)+supY1*sin(A))
+							supY=int(-supX1*sin(A)+supY1*cos(A))
+							supX2=int(-supX1*cos(A)+supY1*sin(A))
+							supY2=int(+supX1*sin(A)+supY1*cos(A))
 						else:
 							Anage=0
 							supX=0
@@ -273,7 +273,7 @@ class Organism():
 			all_im.append(self.im)
 		
 	def move_eat(self):
-		global CO2,O2,nourriture,All_Org
+		global CO2,O2,nourriture,All_Org,proie
 		I1=int(self.yc)//10+60*(int(self.xc)//10)
 		G=grad(I1,self.yeux+1)
 		G=G/((G[0]**2+G[1]**2)**0.5+0.0001)
@@ -323,7 +323,7 @@ class Organism():
 			pygame.draw.circle(fond,self.color,(int(self.xc-1),int(self.yc-1)),2)
 		#pygame.draw.circle(fenetre,(self.type_nourr*255,(1-self.type_nourr)*255,0),(int(self.xc),int(self.yc)),4)
 		Image=pygame.transform.rotate(self.imL[I%len(self.imL)],-self.angle-90)
-		print(I,I%len(self.imL),len(self.imL))
+		
 		fenetre.blit(Image,(int(self.xc-Image.get_width()//2),int(self.yc-Image.get_height()//2)))
 			
 	
@@ -343,7 +343,7 @@ class Organism():
 
 all_codes.append([[1],['M']])
 all_codes.append([[1],['P']])
-all_im=[pygame.Surface((30,10),pygame.SRCALPHA, 32),pygame.Surface((30,10),pygame.SRCALPHA, 32)]
+all_im=[images_cell['M'],images_cell['P']]
 col=[]
 
 def update_colors():
@@ -442,10 +442,17 @@ def show_species():
 		textRect = text.get_rect()
 		textRect.topleft = (L+20, U)
 		fenetre.blit(text,textRect)
+		text = font.render(str(nb[len(all_im)-i-1]), True, (255,255,255))
+		textRect = text.get_rect()
+		textRect.topleft = (L+50, U+20)
+		fenetre.blit(text,textRect)
+		
 		IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
 		IM=IM.convert(back)
 		Ll=int(50*IM.get_width()/IM.get_height())
+
 		pygame.draw.line(fenetre,(255,255,255),(L,U),(L+200,U))
+
 		C=(int(col[len(all_im)-i-1][0]*255),int(col[len(all_im)-i-1][1]*255),int(col[len(all_im)-i-1][2]*255))
 		pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),5)
 		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
