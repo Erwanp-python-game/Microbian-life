@@ -56,6 +56,11 @@ print(pygame.time.get_ticks())
 subL=60
 proie=np.full((subL,subL),1.0)
 proie_mem=np.full((subL,subL),1.0)
+
+proie_dict={}
+pred=np.full((subL,subL),1.0)
+pred_mem=np.full((subL,subL),1.0)
+
 dt=0.1
 diffu=0.1
 nourriture=np.random.uniform(size=subL**2)*4
@@ -91,7 +96,8 @@ images_cell['N']=pygame.image.load('N.png')
 images_cell['Y']=pygame.image.load('Y.png')
 images_cell['R']=pygame.image.load('R.png')
 images_cell['O']=pygame.image.load('O.png')
-images_cell_center=['M','P','G','R','O']
+images_cell['B']=pygame.image.load('B.png')
+images_cell_center=['M','P','G','R','O','B']
 images_cell_end=['N','Y']#,'Y','P','C']
 
 all_codes=[]
@@ -104,6 +110,7 @@ nbc['N']=randint(0,200)
 nbc['Y']=randint(0,200)
 nbc['R']=randint(0,200)
 nbc['O']=randint(0,200)
+nbc['B']=randint(0,200)
 
 fleche=pygame.image.load('fleche.png')
 fond=pygame.Surface((L,L),pygame.SRCALPHA, 32)
@@ -155,15 +162,39 @@ def grad(I,yeux):
 	Pr=np.full((2*yeux+1,2*yeux+1),1.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
-			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#max(max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)+uniform(-200,200)/yeux**2,0)# diviser par la masse de bestioles dessus
+			X[i+yeux][j+yeux]=max(nourriture[(I+i+60*j)%3600]-nourriture[(I)%3600],0)#
 			Pr[i+yeux][j+yeux]+=proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]*((i-yeux)**2+(j-yeux)**2)**0.5
-	X=np.divide(X,Pr)
-	# if yeux==2:
-		# print(Pr,X)
-	
+	X=np.divide(X,Pr.T)
+
 	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
 	Gl=2*max(3-yeux,1)
 	return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
+	
+def grad_pred(I,yeux):
+	X=np.full((2*yeux+1,2*yeux+1),0.0)
+	for i in range(-yeux,yeux+1):
+		for j in range(-yeux,yeux+1):
+			X[i+yeux][j+yeux]=max(proie_mem[(I//subL+i)%subL][(I%subL+j)%subL]-proie_mem[(I//subL)%subL][(I%subL)%subL],0)#
+	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
+	Gl=2*max(3-yeux,1)
+	if np.sum(X)!=0:
+		return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
+	else:
+		return (pos[0]*0,pos[1]*0)
+
+
+def grad_proie(I,yeux):
+	X=np.full((2*yeux+1,2*yeux+1),0.0)
+	for i in range(-yeux,yeux+1):
+		for j in range(-yeux,yeux+1):
+			X[i+yeux][j+yeux]=max(pred_mem[(I//subL+i)%subL][(I%subL+j)%subL]-pred_mem[(I//subL)%subL][(I%subL)%subL],0)#
+			
+	pos=np.unravel_index(np.argmax(X, axis=None), X.shape)
+	Gl=2*max(3-yeux,1)
+	if np.sum(X)!=0:
+		return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
+	else:
+		return (pos[0]*0,pos[1]*0)
 	
 All_Org=[]
 class Organism():
@@ -188,6 +219,7 @@ class Organism():
 		self.racine=0
 		self.born=I
 		self.os=0
+		self.bouche=0
 		addL=0
 		self.sym=self.code[0][0]
 		for i in code:
@@ -205,6 +237,8 @@ class Organism():
 					self.nageoire+=1
 				if 'O'==j:
 					self.os+=1
+				if 'B'==j:
+					self.bouche+=1
 				if 'R'==j:
 					self.racine+=1
 					self.type_photo+=1
@@ -216,11 +250,12 @@ class Organism():
 		self.color=(randint(0,255),randint(0,255),randint(0,255))
 		seed()
 		
-		self.size=(len(code)-2)*self.sym+1+addL
-		self.type_nourr=max((self.type_nourr-1)*self.sym+1,0)# 
-		self.type_photo=max((self.type_photo-1)*self.sym+1,0)# gras pas assez efficace
+		self.size=(len(code)-2)*self.sym+1+addL*self.sym
+		self.type_nourr=max((self.type_nourr-1)*self.sym+1,0)/(2*self.bouche+1)# 
+		self.type_photo=max((self.type_photo-1)*self.sym+1,0)/(2*self.bouche+1)# gras pas assez efficace
 		self.gras=max((self.gras-0.5)*self.sym+0.5,0)
 		self.os=max((self.os-1)*self.sym+1,0)
+		self.bouche=max((self.bouche-1)*self.sym+1,0)
 		self.yeux=int(max((self.yeux-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.nageoire=int(max((self.nageoire-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.stockedCO2=250+50*self.size#300 de base
@@ -277,8 +312,17 @@ class Organism():
 		I1=int(self.yc)//10+60*(int(self.xc)//10)
 		G=grad(I1,self.yeux+1)
 		G=G/((G[0]**2+G[1]**2)**0.5+0.0001)
-		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(8+2*self.nageoire)*dt*G[1]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
-		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(8+2*self.nageoire)*dt*G[0]*np.heaviside(self.fast,0)/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
+		G2=(0,0)
+		G3=(0,0)
+		if self.bouche>0:
+			G2=grad_pred(I1,self.yeux+1)
+			G2=G2/((G2[0]**2+G2[1]**2)**0.5+0.0001)
+		else:
+			G3=grad_proie(I1,self.yeux+1)
+			G3=G3/((G3[0]**2+G3[1]**2)**0.5+0.0001)
+		
+		self.vx=(0.5*self.vx+0.5*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(12+3*self.nageoire)*dt*((G[1]-1.5*G3[1])*(1-np.heaviside(self.bouche,0))*np.heaviside(self.fast,0)+G2[1]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
+		self.vy=(0.5*self.vy+0.5*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(12+3*self.nageoire)*dt*((G[0]-1.5*G3[0])*(1-np.heaviside(self.bouche,0))*np.heaviside(self.fast,0)+G2[0]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
 		self.xc=(self.xc+self.vx*self.not_fixed)%L
 		self.yc=(self.yc+self.vy*self.not_fixed)%L
 		consumed=0
@@ -298,7 +342,16 @@ class Organism():
 		self.I1=I1
 		self.angle=meanAngle(self.angle,AngleReturn(self.vx,self.vy),self.size)
 		
-		proie[int(self.xc)//10][int(self.yc)//10]+=self.size
+		if self.bouche==0:
+			proie[int(self.xc)//10][int(self.yc)//10]+=self.size
+		else:
+			pred[int(self.xc)//10][int(self.yc)//10]+=self.size
+			if str(int(self.xc)//10)+str(int(self.yc)//10) in proie_dict.keys():
+				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
+				if cible in All_Org and randint(0,int(self.size+self.bouche)+1)>=2*cible.size*(1+0.5*self.os):
+					#print('miam',cible.eated())
+					self.stockedCO2+=cible.eated()
+					
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
 			if randint(0,7)==0:
@@ -329,6 +382,14 @@ class Organism():
 	
 	def alive(self):
 		return (self.age<2800+np.random.normal(0,100)+200*self.size+self.os*150)
+	
+	def eated(self):
+		self.age=10**5
+		nourriture[self.I1]=nourriture[self.I1]+self.stockedCO2//2
+		A=copy(self.stockedCO2-self.stockedCO2//2)
+		self.stockedCO2=0
+		
+		return A
 		
 	def release(self):
 		global CO2,O2,nourriture
@@ -460,13 +521,13 @@ def show_species():
 
 
 
-for i in range(0,10):
+for i in range(0,30):
 	R=randint(0,1)
 	if R==1:
 		code=[[1],['M']]
-	else:
+	if R==0:
 		code=[[1],['P']]
-	
+
 
 	All_Org.append(Organism(randint(0,L-1),randint(0,L-1),code,[0]))
 	All_Org[-1].buil_Im()
@@ -487,6 +548,7 @@ while q==0:
 	T1=pygame.time.get_ticks()
 	I+=1
 	proie=np.full((subL,subL),1.0)
+	pred=np.full((subL,subL),1.0)
 	#pygame.time.wait(100)
 
 	nourriture=np.dot(flux,nourriture)
@@ -513,15 +575,19 @@ while q==0:
 
 	Im=show_food(1)
 	fenetre.blit(Im,(0,0))
-	
+	proie_dict_mem={}
 	for i in All_Org:
 		i.move_eat()
+		if i.bouche==0:
+			proie_dict_mem[str(int(i.xc)//10)+str(int(i.yc)//10)]=i# bon début
 		i.draw(trace)
 		if i.alive()==False:
 			i.release()
 			All_Org.remove(i)
+	proie_dict=proie_dict_mem.copy()
 	proie=signal.convolve2d(proie, filterA, mode='same', boundary='wrap')
 	proie_mem=proie.copy()
+	pred_mem=pred.copy()
 	
 	if (I%100)==0 and graphe==1:
 		ax2.scatter(I,O2,c='blue')
