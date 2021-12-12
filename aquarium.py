@@ -364,7 +364,7 @@ class Organism():
 				if cible in All_Org and randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
 					Miam=cible.eated()
 					self.stockedCO2+=Miam
-					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
+					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)# mettre self.digestion
 					
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
