@@ -181,7 +181,7 @@ def grad(I,yeux):
 	Gl=2*max(3-yeux,1)
 	return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
 	
-def grad_pred(I,yeux,vx,vy):
+def grad_pred(I,yeux,vx,vy,D):
 	X=np.full((2*yeux+1,2*yeux+1),0.0)
 	for i in range(-yeux,yeux+1):
 		for j in range(-yeux,yeux+1):
@@ -189,10 +189,10 @@ def grad_pred(I,yeux,vx,vy):
 	pos=np.unravel_index(np.argmax(X.T, axis=None), X.shape)
 	Gl=2*max(3-yeux,1)
 	Ra=1.5*pi*random()
-	if np.sum(X)!=0:
+	if np.sum(X)!=0 and D==0:
 		return (pos[0]-yeux+randint(-Gl,Gl),pos[1]-yeux+randint(-Gl,Gl))
 	else:
-		return (pos[0]*0+vx*cos(Ra)+vy*sin(Ra),pos[1]*0+vy*cos(Ra)-vx*sin(Ra))
+		return (pos[0]*0,pos[1]*0)#(pos[0]*0+vx*cos(Ra)+vy*sin(Ra),pos[1]*0+vy*cos(Ra)-vx*sin(Ra))
 
 
 def grad_proie(I,yeux):
@@ -255,7 +255,7 @@ class Organism():
 					self.racine+=1
 					self.type_photo+=1
 			addL=addL+2*(len(i)-1)
-		addL=addL-1.8*self.nageoire*self.sym-1.8*self.yeux*self.sym
+		addL=addL-1.8*self.nageoire*self.sym-1.8*self.yeux*self.sym# là un pb je pense
 		for j in range(1,len(code)):
 			seedn+=nbc[self.code[j][0]]
 		seed(seedn)
@@ -272,7 +272,7 @@ class Organism():
 		self.nageoire=int(max((self.nageoire-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.stockedCO2=250+50*self.size#300 de base
 		self.not_fixed=1
-
+		self.digestion=0
 		
 	def buil_Im(self):
 		Lm=max(30,20*(len(self.code)),20*max(len(elem) for elem in self.code))
@@ -327,14 +327,14 @@ class Organism():
 		G2=(0,0)
 		G3=(0,0)
 		if self.bouche>0:
-			G2=grad_pred(I1,self.yeux+1,self.vx,self.vy)
+			G2=grad_pred(I1,self.yeux+1,self.vx,self.vy,self.digestion)
 			G2=G2/((G2[0]**2+G2[1]**2)**0.5+0.0001)
 		else:
 			G3=grad_proie(I1,self.yeux+1)
 			G3=G3/((G3[0]**2+G3[1]**2)**0.5+0.0001)
 		
-		self.vx=(0.5*self.vx+0.3*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*(((G[1]/(self.bouche*3+1))-1.1*G3[1]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[1]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
-		self.vy=(0.5*self.vy+0.3*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*(((G[0]/(self.bouche*3+1))-1.1*G3[0]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[0]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
+		self.vx=(0.5*self.vx+0.3*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*((G[1]-1.1*G3[1]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[1]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
+		self.vy=(0.5*self.vy+0.3*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*((G[0]-1.1*G3[0]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[0]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
 		self.xc=(self.xc+self.vx*self.not_fixed)%L
 		self.yc=(self.yc+self.vy*self.not_fixed)%L
 		consumed=0
@@ -363,9 +363,11 @@ class Organism():
 				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
 				if cible in All_Org and randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
 					Miam=cible.eated()
-					self.stockedCO2+=Miam
+					self.digestion=Miam#self.stockedCO2+=Miam
 					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)# mettre self.digestion
-					
+			self.stockedCO2+=self.digestion-max(0,self.digestion-1-self.bouche)
+			self.digestion=max(0,self.digestion-1-self.bouche)
+			#print(self.digestion)
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
 			if randint(0,7)==0:
@@ -401,11 +403,11 @@ class Organism():
 		global CO2,O2,nourriture
 		self.age=10**5
 		if randint(0,1)==0:
-			nourriture[self.I1]=nourriture[self.I1]+3*self.stockedCO2//4
+			nourriture[self.I1]=nourriture[self.I1]+1*self.stockedCO2//4
 		else:
-			nourriture[self.I1]=nourriture[self.I1]+3*self.stockedCO2//4
-			O2=O2+3*self.stockedCO2//4
-		A=copy(self.stockedCO2-3*self.stockedCO2//4)
+			nourriture[self.I1]=nourriture[self.I1]+1*self.stockedCO2//4
+			O2=O2+1*self.stockedCO2//4
+		A=copy(self.stockedCO2-1*self.stockedCO2//4)
 		self.stockedCO2=0
 		
 		return A
