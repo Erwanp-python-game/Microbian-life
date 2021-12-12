@@ -50,6 +50,17 @@ for i in range(0,3):
 		courantX=np.add(courantX0[i*L:(i+1)*L,j*L:(j+1)*L],courantX)
 		courantY=np.add(courantY0[i*L:(i+1)*L,j*L:(j+1)*L],courantY)
 print(pygame.time.get_ticks())
+Lco=10
+filterB=np.full((Lco,Lco),0.0)
+for i in range(0,Lco):
+	for j in range(0,Lco):
+		filterB[i][j]=np.exp((-0.5*(((i-Lco/2)**2+(j-Lco/2)**2)**2)/(Lco**2)))*(1/((2*pi)*Lco))
+filterB=filterB/filterB.sum()
+print(filterB,filterB.sum())
+
+
+courantX=signal.convolve2d(courantX, filterB, mode='same', boundary='wrap')
+courantY=signal.convolve2d(courantY, filterB, mode='same', boundary='wrap')
 # courantX=courantX0[L:2*L,L:2*L]
 # courantY=courantY0[L:2*L,L:2*L]
 
@@ -252,8 +263,8 @@ class Organism():
 		seed()
 		
 		self.size=(len(code)-2)*self.sym+1+addL*self.sym
-		self.type_nourr=max((self.type_nourr-1)*self.sym+1,0)#/(2*self.bouche+1)# 
-		self.type_photo=max((self.type_photo-1)*self.sym+1,0)#/(2*self.bouche+1)# gras pas assez efficace
+		self.type_nourr=max((self.type_nourr-1-self.bouche)*self.sym+1,0)# 
+		self.type_photo=max((self.type_photo-1-self.bouche)*self.sym+1,0)# gras pas assez efficace
 		self.gras=max((self.gras-0.5)*self.sym+0.5,0)
 		self.os=max((self.os-1)*self.sym+1,0)
 		self.bouche=max((self.bouche-1)*self.sym+1,0)
@@ -322,8 +333,8 @@ class Organism():
 			G3=grad_proie(I1,self.yeux+1)
 			G3=G3/((G3[0]**2+G3[1]**2)**0.5+0.0001)
 		
-		self.vx=(0.5*self.vx+0.3*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*(((G[1]/(self.bouche*3+1))-1.5*G3[1]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[1]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
-		self.vy=(0.5*self.vy+0.3*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*(((G[0]/(self.bouche*3+1))-1.5*G3[0]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[0]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
+		self.vx=(0.5*self.vx+0.3*courantY[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*(((G[1]/(self.bouche*3+1))-1.1*G3[1]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[1]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# div norme de G
+		self.vy=(0.5*self.vy+0.3*courantX[int(self.xc)][int(self.yc)]/(log(self.size/10+3)*(1*self.nageoire+2)))+(10+2*self.nageoire)*dt*(((G[0]/(self.bouche*3+1))-1.1*G3[0]*(1-np.heaviside(self.bouche,0)))*np.heaviside(self.fast,0)+G2[0]*np.heaviside(self.bouche,0))/log(self.size/20+3)+(1-np.heaviside(self.fast,0))*np.random.normal(0,0.2)# viv v par taille
 		self.xc=(self.xc+self.vx*self.not_fixed)%L
 		self.yc=(self.yc+self.vy*self.not_fixed)%L
 		consumed=0
@@ -350,9 +361,10 @@ class Organism():
 			pred[int(self.xc)//10][int(self.yc)//10]+=self.size
 			if str(int(self.xc)//10)+str(int(self.yc)//10) in proie_dict.keys():
 				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
-				if cible in All_Org and randint(0,int(20*cible.size*(1+0.5*cible.os))<=self.size+self.bouche)+1:
-					#print('miam',cible.eated())
-					self.stockedCO2+=cible.eated()
+				if cible in All_Org and randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
+					Miam=cible.eated()
+					self.stockedCO2+=Miam
+					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
 					
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
@@ -485,17 +497,17 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 						code_r[Muta].append(choice(images_cell_end))
 					muted=1
 		
-		if (code_r in all_codes)==False:
-			all_codes.append(code_r)
-			update_colors()
-			nb.append(0)
-			Big_data.append([0])
-			start_I.append(I)
-			print(showcode(code_r))
-			return code_r
+	if (code_r in all_codes)==False:
+		all_codes.append(code_r)
+		update_colors()
+		nb.append(0)
+		Big_data.append([0])
+		start_I.append(I)
+		print(showcode(code_r))
+		return code_r
 			
-		else:
-			return code_r
+	else:
+		return code_r
 
 font = pygame.font.Font('freesansbold.ttf', 13)
 def show_species():
@@ -592,7 +604,7 @@ while q==0:
 			i.release()
 			All_Org.remove(i)
 	proie_dict=proie_dict_mem.copy()
-	proie=signal.convolve2d(proie, filterA, mode='same', boundary='wrap')
+	proie=signal.convolve2d(proie, filterB, mode='same', boundary='wrap')
 	proie_mem=proie.copy()
 	pred_mem=pred.copy()
 	
