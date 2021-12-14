@@ -56,7 +56,7 @@ for i in range(0,Lco):
 	for j in range(0,Lco):
 		filterB[i][j]=np.exp((-0.5*(((i-Lco/2)**2+(j-Lco/2)**2)**2)/(Lco**2)))*(1/((2*pi)*Lco))
 filterB=filterB/filterB.sum()
-print(filterB,filterB.sum())
+
 
 
 courantX=signal.convolve2d(courantX, filterB, mode='same', boundary='wrap')
@@ -361,8 +361,8 @@ class Organism():
 			pred[int(self.xc)//10][int(self.yc)//10]+=self.size
 			if str(int(self.xc)//10)+str(int(self.yc)//10) in proie_dict.keys():
 				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
-				if cible in All_Org and randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
-					Miam=cible.eated(max(self.bouche-self.type_nourr,0))# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!!
+				if cible in All_Org and (self.bouche+self.size+randint(-2,2)>cible.size+cible.os*2 or randint(0,300)==0) and randint(0,30)==0:#randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
+					Miam=cible.eated(self.bouche)# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!!
 					self.digestion=Miam
 					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
 			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche)
@@ -400,13 +400,13 @@ class Organism():
 	def eated(self,B):
 		global CO2,O2,nourriture
 		self.age=10**5
-		mB=min(10-B,0)
+		mB=min(4-B,0)
 		if randint(0,1)==0:
-			nourriture[self.I1]=nourriture[self.I1]+mB*self.stockedCO2//10
+			nourriture[self.I1]=nourriture[self.I1]+mB*self.stockedCO2//4
 		else:
-			nourriture[self.I1]=nourriture[self.I1]+mB*self.stockedCO2//10
-			O2=O2+mB*self.stockedCO2//10
-		A=copy(self.stockedCO2-mB*self.stockedCO2//10)
+			nourriture[self.I1]=nourriture[self.I1]+mB*self.stockedCO2//4
+			O2=O2+mB*self.stockedCO2//4
+		A=copy(self.stockedCO2-mB*self.stockedCO2//4)
 		self.stockedCO2=0
 		
 		return A
