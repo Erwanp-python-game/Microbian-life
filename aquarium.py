@@ -254,17 +254,17 @@ class Organism():
 				if 'R'==j:
 					self.racine+=1
 					self.type_photo+=1
-			addL=addL+2*(len(i)-1)
-		addL=addL-1.8*self.nageoire*self.sym-1.8*self.yeux*self.sym# là un pb je pense
+			addL=addL+2*(len(i)-1)+1
+		addL=addL-self.nageoire*1.5-self.yeux*1.5
 		for j in range(1,len(code)):
 			seedn+=nbc[self.code[j][0]]
 		seed(seedn)
 		self.color=(randint(0,255),randint(0,255),randint(0,255))
 		seed()
 		
-		self.size=(len(code)-2)*self.sym+1+addL*self.sym
-		self.type_nourr=max((self.type_nourr-1-self.bouche)*self.sym+1,0)# 
-		self.type_photo=max((self.type_photo-1-self.bouche)*self.sym+1,0)# gras pas assez efficace
+		self.size=(addL-2)*self.sym+1
+		self.type_nourr=max((self.type_nourr-1)*self.sym+1,0)# 
+		self.type_photo=max((self.type_photo-1)*self.sym+1,0)# gras pas assez efficace
 		self.gras=max((self.gras-0.5)*self.sym+0.5,0)
 		self.os=max((self.os-1)*self.sym+1,0)
 		self.bouche=max((self.bouche-1)*self.sym+1,0)
@@ -350,7 +350,7 @@ class Organism():
 			O2=O2+consumed/2
 		
 		self.stockedCO2=self.stockedCO2+consumed/2
-		self.age=self.age+1+self.bouche*0.5+0.5*(9+0.05*self.size-consumed*(self.sym+0.2)/(self.sym))/(1+self.gras)#à voir
+		self.age=self.age+1+self.bouche*0.5+0.5*(9+0.05*self.size-consumed*(self.sym+0.2)/(self.sym))/(1+self.gras)
 		self.I1=I1
 		self.angle=meanAngle(self.angle,AngleReturn(self.vx,self.vy),self.size)
 		
@@ -362,18 +362,16 @@ class Organism():
 			if str(int(self.xc)//10)+str(int(self.yc)//10) in proie_dict.keys():
 				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
 				if cible in All_Org and randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
-					Miam=cible.eated()
-					self.digestion=Miam#self.stockedCO2+=Miam
-					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)# mettre self.digestion
-			self.stockedCO2+=self.digestion-max(0,self.digestion-1-self.bouche)
+					Miam=cible.eated(max(self.bouche-self.type_nourr,0))# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!!
+					self.digestion=Miam
+					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
+			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche)
 			self.digestion=max(0,self.digestion-1-self.bouche)
-			#print(self.digestion)
+			
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
 			if randint(0,7)==0:
-				#print(self.code)
 				CM=mutation(deepcopy(self.code))
-				#print(CM,self.code)
 				All_Org.append(Organism((self.xc+np.random.normal(0,5))%600,(self.yc+np.random.normal(0,5))%600,CM,self.imL))
 				All_Org[-1].buil_Im()
 				nb[all_codes.index(CM)]+=1
@@ -399,15 +397,16 @@ class Organism():
 	def alive(self):
 		return (self.age<2800+np.random.normal(0,100)+200*self.size+self.os*150)
 	
-	def eated(self):
+	def eated(self,B):
 		global CO2,O2,nourriture
 		self.age=10**5
+		mB=min(10-B,0)
 		if randint(0,1)==0:
-			nourriture[self.I1]=nourriture[self.I1]+1*self.stockedCO2//4
+			nourriture[self.I1]=nourriture[self.I1]+mB*self.stockedCO2//10
 		else:
-			nourriture[self.I1]=nourriture[self.I1]+1*self.stockedCO2//4
-			O2=O2+1*self.stockedCO2//4
-		A=copy(self.stockedCO2-1*self.stockedCO2//4)
+			nourriture[self.I1]=nourriture[self.I1]+mB*self.stockedCO2//10
+			O2=O2+mB*self.stockedCO2//10
+		A=copy(self.stockedCO2-mB*self.stockedCO2//10)
 		self.stockedCO2=0
 		
 		return A
