@@ -511,32 +511,33 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 		return code_r
 
 font = pygame.font.Font('freesansbold.ttf', 13)
-def show_species():
+def show_species(keyword):
 	back=pygame.Surface((200,L), 32)
 	back.fill((0,0,0))
 	U=20-curseur*50
 	fenetre.blit(back,(L,0))
-	for i,j in enumerate(reversed(all_codes)):
-		U=U+60
-		T=showcode(j)
-		text = font.render(T, True, (255,255,255))
-		textRect = text.get_rect()
-		textRect.topleft = (L+20, U)
-		fenetre.blit(text,textRect)
-		text = font.render(str(nb[len(all_im)-i-1]), True, (255,255,255))
-		textRect = text.get_rect()
-		textRect.topleft = (L+50, U+20)
-		fenetre.blit(text,textRect)
-		
-		IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
-		IM=IM.convert(back)
-		Ll=int(50*IM.get_width()/IM.get_height())
-
-		pygame.draw.line(fenetre,(255,255,255),(L,U),(L+200,U))
-
-		C=(int(col[len(all_im)-i-1][0]*255),int(col[len(all_im)-i-1][1]*255),int(col[len(all_im)-i-1][2]*255))
-		pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),5)
-		fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
+	if keyword=='time':
+		for i,j in enumerate(reversed(all_codes)):
+			U=U+60
+			T=showcode(j)
+			text = font.render(T, True, (255,255,255))
+			textRect = text.get_rect()
+			textRect.topleft = (L+20, U)
+			fenetre.blit(text,textRect)
+			text = font.render(str(nb[len(all_im)-i-1]), True, (255,255,255))
+			textRect = text.get_rect()
+			textRect.topleft = (L+50, U+20)
+			fenetre.blit(text,textRect)
+			
+			IM=pygame.transform.rotate(all_im[len(all_im)-i-1],90)
+			IM=IM.convert(back)
+			Ll=int(50*IM.get_width()/IM.get_height())
+	
+			pygame.draw.line(fenetre,(255,255,255),(L,U),(L+200,U))
+	
+			C=(int(col[len(all_im)-i-1][0]*255),int(col[len(all_im)-i-1][1]*255),int(col[len(all_im)-i-1][2]*255))
+			pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),5)
+			fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
 		
 
 
@@ -631,7 +632,7 @@ while q==0:
 		for i in range(0,len(col)):
 			Big_data[i].append(round(nb[i]/np.sum(nb),2))# have smthg to record indices where it started
 		
-	show_species()
+	show_species('time')
 	pygame.display.flip()
 	clock.tick(30)
 
