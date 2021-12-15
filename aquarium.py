@@ -287,6 +287,8 @@ class Organism():
 					Y=int((i-1)*10*cos(A))+Lm//2-5
 					if self.code[i][0] in ['E','C']:
 						IMR=pygame.transform.rotate(images_cell[self.code[i][0]],A*180/pi)
+						X+=5-IMR.get_width()//2
+						Y+=5-IMR.get_height()//2
 					else:
 						IMR=images_cell[self.code[i][0]]
 					
@@ -310,9 +312,12 @@ class Organism():
 							supX2=0
 							supY2=0
 						if self.code[i][k] not in images_cell_end:
-							
-							ImA.blit(pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi),(X+deltaX,Y+deltaY))
-							ImA.blit(pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi),(X-deltaX,Y-deltaY))
+							if self.code[i][0] in ['E','C']:
+								IMR=pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi)
+							else:
+								IMR=images_cell[self.code[i][k]]
+							ImA.blit(IMR,(X+deltaX,Y+deltaY))
+							ImA.blit(IMR,(X-deltaX,Y-deltaY))
 						else:
 							Im=pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi+Anage)
 							shift=(Im.get_width()//2)-5
