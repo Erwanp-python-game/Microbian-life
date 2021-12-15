@@ -107,8 +107,8 @@ images_cell['N']=pygame.image.load('N.png')
 images_cell['Y']=pygame.image.load('Y.png')
 images_cell['R']=pygame.image.load('R.png')
 images_cell['O']=pygame.image.load('O.png')
-images_cell['B']=pygame.image.load('B.png')
-images_cell_center=['M','P','G','R','O','B']
+images_cell['C']=pygame.image.load('C.png')
+images_cell_center=['M','P','G','R','O','C']
 images_cell_end=['N','Y']#,'Y','P','C']
 
 all_codes=[]
@@ -121,7 +121,7 @@ nbc['N']=randint(0,200)
 nbc['Y']=randint(0,200)
 nbc['R']=randint(0,200)
 nbc['O']=randint(0,200)
-nbc['B']=randint(0,200)
+nbc['C']=randint(0,200)
 
 fleche=pygame.image.load('fleche.png')
 fond=pygame.Surface((L,L),pygame.SRCALPHA, 32)
@@ -249,7 +249,7 @@ class Organism():
 					self.nageoire+=1
 				if 'O'==j:
 					self.os+=1
-				if 'B'==j:
+				if 'C'==j:
 					self.bouche+=1
 				if 'R'==j:
 					self.racine+=1
