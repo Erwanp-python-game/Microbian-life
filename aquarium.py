@@ -285,7 +285,13 @@ class Organism():
 					A=j*2*pi/self.sym
 					X=int((i-1)*10*sin(A))+Lm//2-5
 					Y=int((i-1)*10*cos(A))+Lm//2-5
-					ImA.blit(images_cell[self.code[i][0]],(X,Y))
+					if self.code[i][0] in ['E','C']:
+						IMR=pygame.transform.rotate(images_cell[self.code[i][0]],A*180/pi)
+					else:
+						IMR=images_cell[self.code[i][0]]
+					
+					
+					ImA.blit(IMR,(X,Y))# un peu shifted à prendre en compte
 					for k in range(1,len(self.code[i])):
 						deltaX=int((k)*10*cos(A))
 						deltaY=-int((k)*10*sin(A))
@@ -304,8 +310,9 @@ class Organism():
 							supX2=0
 							supY2=0
 						if self.code[i][k] not in images_cell_end:
-							ImA.blit(images_cell[self.code[i][k]],(X+deltaX,Y+deltaY))
-							ImA.blit(images_cell[self.code[i][k]],(X-deltaX,Y-deltaY))
+							
+							ImA.blit(pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi),(X+deltaX,Y+deltaY))
+							ImA.blit(pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi),(X-deltaX,Y-deltaY))
 						else:
 							Im=pygame.transform.rotate(images_cell[self.code[i][k]],A*180/pi+Anage)
 							shift=(Im.get_width()//2)-5
