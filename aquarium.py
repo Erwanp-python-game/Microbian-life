@@ -562,8 +562,32 @@ def show_species(keyword):
 			C=(int(col[len(all_im)-i-1][0]*255),int(col[len(all_im)-i-1][1]*255),int(col[len(all_im)-i-1][2]*255))
 			pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),5)
 			fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
+	
+	if keyword=='nb':
+		LE=[int(i) for _,i in reversed(sorted(zip(nb,np.linspace(0,len(nb)-1,len(nb)))))]
 		
-
+		for i in LE:
+			j=all_codes[i]
+			U=U+60
+			T=showcode(j)
+			text = font.render(T, True, (255,255,255))
+			textRect = text.get_rect()
+			textRect.topleft = (L+20, U)
+			fenetre.blit(text,textRect)
+			text = font.render(str(nb[i]), True, (255,255,255))
+			textRect = text.get_rect()
+			textRect.topleft = (L+50, U+20)
+			fenetre.blit(text,textRect)
+			
+			IM=pygame.transform.rotate(all_im[i],90)
+			IM=IM.convert(back)
+			Ll=int(50*IM.get_width()/IM.get_height())
+	
+			pygame.draw.line(fenetre,(255,255,255),(L,U),(L+200,U))
+	
+			C=(int(col[i][0]*255),int(col[i][1]*255),int(col[i][2]*255))
+			pygame.draw.line(fenetre,C,(L+10,U+30),(L+20,U+30),5)
+			fenetre.blit(pygame.transform.scale(IM,(Ll,50)),(textRect[0]+50,U+10))# afficher par plus vivantes et plus récentes éventuellement plus complexes et plus vivantes au max
 
 
 for i in range(0,30):
@@ -656,7 +680,7 @@ while q==0:
 		for i in range(0,len(col)):
 			Big_data[i].append(round(nb[i]/np.sum(nb),2))# have smthg to record indices where it started
 		
-	show_species('time')
+	show_species('nb')
 	pygame.display.flip()
 	clock.tick(30)
 
