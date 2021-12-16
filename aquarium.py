@@ -265,7 +265,7 @@ class Organism():
 				if 'E'==j:
 					self.esto+=1
 			addL=addL+2*(len(i)-1)+1
-		addL=addL-self.nageoire*1.5-self.yeux*1.5
+		addL=addL-self.nageoire*1.5-self.yeux*1.5-self.pic*1.5
 		for j in range(1,len(code)):
 			seedn+=nbc[self.code[j][0]]
 		seed(seedn)
