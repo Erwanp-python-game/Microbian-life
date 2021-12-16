@@ -108,8 +108,10 @@ images_cell['Y']=pygame.image.load('Y.png')
 images_cell['R']=pygame.image.load('R.png')
 images_cell['O']=pygame.image.load('O.png')
 images_cell['C']=pygame.image.load('C.png')
-images_cell_center=['M','P','G','R','O','C']
-images_cell_end=['N','Y']#,'Y','P','C']
+images_cell['S']=pygame.image.load('S.png')
+images_cell['E']=pygame.image.load('E.png')
+images_cell_center=['M','P','G','R','O','C','E']
+images_cell_end=['N','Y','S']#,'Y','P','C']
 
 all_codes=[]
 seed(0)
@@ -122,6 +124,8 @@ nbc['Y']=randint(0,200)
 nbc['R']=randint(0,200)
 nbc['O']=randint(0,200)
 nbc['C']=randint(0,200)
+nbc['S']=randint(0,200)
+nbc['E']=randint(0,200)
 
 fleche=pygame.image.load('fleche.png')
 fond=pygame.Surface((L,L),pygame.SRCALPHA, 32)
@@ -232,6 +236,8 @@ class Organism():
 		self.born=I
 		self.os=0
 		self.bouche=0
+		self.pic=0
+		self.esto=0
 		addL=0
 		self.sym=self.code[0][0]
 		for i in code:
@@ -254,6 +260,10 @@ class Organism():
 				if 'R'==j:
 					self.racine+=1
 					self.type_photo+=1
+				if 'S'==j:
+					self.pic+=1
+				if 'E'==j:
+					self.esto+=1
 			addL=addL+2*(len(i)-1)+1
 		addL=addL-self.nageoire*1.5-self.yeux*1.5
 		for j in range(1,len(code)):
@@ -267,6 +277,8 @@ class Organism():
 		self.type_photo=max((self.type_photo-1)*self.sym+1,0)# gras pas assez efficace
 		self.gras=max((self.gras-0.5)*self.sym+0.5,0)
 		self.os=max((self.os-1)*self.sym+1,0)
+		self.esto=max((self.esto-1)*self.sym+1,0)
+		self.pic=max((self.pic-1)*self.sym+1,0)
 		self.bouche=max((self.bouche-1)*self.sym+1,0)
 		self.yeux=int(max((self.yeux-1)*self.sym+1,0)*np.heaviside(self.fast,0))
 		self.nageoire=int(max((self.nageoire-1)*self.sym+1,0)*np.heaviside(self.fast,0))
@@ -373,12 +385,12 @@ class Organism():
 			pred[int(self.xc)//10][int(self.yc)//10]+=self.size
 			if str(int(self.xc)//10)+str(int(self.yc)//10) in proie_dict.keys():
 				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
-				if cible in All_Org and (self.bouche+self.size+randint(-2,2)>cible.size+cible.os*2 or randint(0,300)==0) and randint(0,30)==0:#randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
+				if cible in All_Org and (self.bouche+self.size//2+randint(-2,2)>cible.size//2+(cible.os+cible.pic)*3 or randint(0,300)==0) and randint(0,30)==0:#randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
 					Miam=cible.eated(self.bouche)# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!!
 					self.digestion=Miam
 					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
-			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche)
-			self.digestion=max(0,self.digestion-1-self.bouche)
+			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche-0.5*self.esto)
+			self.digestion=max(0,self.digestion-0.5-0.5*self.bouche-0.5*self.esto)
 			
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
@@ -466,7 +478,7 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 	code_r=deepcopy(code_g)
 	while muted==0:
 	
-		R=randint(-8,11)
+		R=randint(-10,11)
 		if R>10:
 			Muta=randint(1,len(code_g)-1)
 			if code_r[Muta][-1] in images_cell_end:
@@ -493,14 +505,14 @@ def mutation(code_g):# assurer qu'une mutation ait lieu
 				code_r[0][0]=max(code_r[0][0]-1,1)
 				muted=1
 			
-		if R<=6 and R>-4:
+		if R<=6 and R>-6:
 	
 			if len(code_r)==2 and len(code_r[1])==1:
 				code_r[0][0]=choices([1,2,3,4,5,6],[6,5,4,3,2,1],k=1)[0] # faire rétrécir
 			code_r.append([choice(images_cell_center)])
 			muted=1
 		
-		if R<=-4 and R>-9:# check angle
+		if R<=-6 and R>-11:# check angle
 				print("largeur")
 				Muta=randint(1,len(code_g)-1)
 				if (Muta-1)*abs(tan(pi/(code_g[0][0])))-1>len(code_g[Muta]) or code_g[0][0]<3:
