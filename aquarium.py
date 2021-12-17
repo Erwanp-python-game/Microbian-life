@@ -15,8 +15,11 @@ for i in range(1,10):
 		b=b+abs(cos(2*pi*(j)/i))
 	print(max(a,b),i)
 
-
-
+def randomRot(x,y):
+	a=(random()-0.5)*pi/2
+	x2=x*cos(a)+y*sin(a)
+	y2=-x*sin(a)+y*cos(a)
+	return x2,y2
 L=600
 pygame.init()
 fenetre = pygame.display.set_mode((L+200, L))
@@ -49,6 +52,11 @@ for i in range(0,3):
 	for j in range(0,3):
 		courantX=np.add(courantX0[i*L:(i+1)*L,j*L:(j+1)*L],courantX)
 		courantY=np.add(courantY0[i*L:(i+1)*L,j*L:(j+1)*L],courantY)
+		
+# for i in range(0,L):
+	# for j in range(0,L):
+		# courantX[i][j],courantY[i][j]=randomRot(courantX[i][j],courantY[i][j])
+
 print(pygame.time.get_ticks())
 Lco=10
 filterB=np.full((Lco,Lco),0.0)
@@ -389,8 +397,8 @@ class Organism():
 					Miam=cible.eated(self.bouche)# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!!
 					self.digestion=Miam
 					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
-			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche-0.5*self.esto)
-			self.digestion=max(0,self.digestion-0.5-0.5*self.bouche-0.5*self.esto)
+			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche-1*self.esto)
+			self.digestion=max(0,self.digestion-0.5-0.5*self.bouche-1*self.esto)
 			
 		
 		if self.stockedCO2>500+100*self.size and randint(0,10)==0:
