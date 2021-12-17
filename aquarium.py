@@ -393,8 +393,8 @@ class Organism():
 			pred[int(self.xc)//10][int(self.yc)//10]+=self.size
 			if str(int(self.xc)//10)+str(int(self.yc)//10) in proie_dict.keys():
 				cible=proie_dict[str(int(self.xc)//10)+str(int(self.yc)//10)]
-				if cible in All_Org and (self.bouche+self.size//2+randint(-2,2)>cible.size//2+(cible.os+cible.pic)*3 or randint(0,300)==0) and randint(0,30)==0:#randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
-					Miam=cible.eated(self.bouche)# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!!
+				if cible in All_Org and (self.bouche+(self.size//2)+randint(-2,2)>(cible.size//2)+(cible.os+cible.pic)*4 or randint(0,50)==0) and randint(0,30)==0:#randint(0,abs(int(10*cible.size*(1+1*cible.os))))<=self.size+self.bouche+1:
+					Miam=cible.eated(self.bouche)# ça un peu une bonne idée !!!!!!!!!!!!!!!!!!!!!! avant aléatoire 300, 150 bien aussi
 					self.digestion=Miam
 					self.age-=0.5*(Miam*(self.sym+0.2)/(self.sym))/(1+self.gras)
 			self.stockedCO2+=self.digestion-max(0,self.digestion-0.5-0.5*self.bouche-1*self.esto)
